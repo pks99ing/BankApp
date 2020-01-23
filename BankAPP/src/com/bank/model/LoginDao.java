@@ -1,0 +1,112 @@
+package com.bank.model;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+
+
+public class LoginDao {
+	private String cust_id;
+	private String acc_id;
+	private String balance;
+	private String password;
+	private Connection con;
+	private PreparedStatement pst;
+	private ResultSet result;
+	private int rowAffected;
+	
+	public String getCust_id() {
+		return cust_id;
+	}
+
+	public String getAcc_id() {
+		return acc_id;
+	}
+
+	public String getBalance() {
+		return balance;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+	
+	public void setCust_id(String cust_id) {
+		this.cust_id = cust_id;
+	}
+
+	public void setAcc_id(String acc_id) {
+		this.acc_id = acc_id;
+	}
+
+	public void setBalance(String balance) {
+		this.balance = balance;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public LoginDao() {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bankapp", "root", "root");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public boolean loginToHomePage() {
+		try {
+			pst=con.prepareStatement("select * from bank_info where cust_id=? and password=?");
+			pst.setString(1,cust_id);
+			pst.setString(2, password);
+			result=pst.executeQuery();
+			while(result.next()) {
+				acc_id=result.getString(2);
+				return true;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+	public boolean checkBalance() {
+		try {
+			pst=con.prepareStatement("select balance from bank_info where Acc_no=?");
+			pst.setString(1,acc_id);
+			result=pst.executeQuery();
+			while(result.next()) {
+				balance=result.getString(1);
+				return true;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+		
+	}
+	public boolean changePassword() {
+		try {
+			pst=con.prepareStatement("update bank_info set password=? where Acc_no=?" );
+			
+			pst.setString(1, password);
+			pst.setString(2, acc_id);
+			rowAffected=pst.executeUpdate();
+			if(rowAffected>0)
+				return true;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+		
+	}
+
+
+
+}
