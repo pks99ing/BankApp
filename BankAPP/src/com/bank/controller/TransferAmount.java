@@ -1,6 +1,7 @@
 package com.bank.controller;
 
 import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -10,28 +11,24 @@ import javax.servlet.http.HttpSession;
 
 import com.bank.model.LoginDao;
 
-
-public class LoginServlet extends HttpServlet {
+@WebServlet("/transferAmount")
+public class TransferAmount extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
+  
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String cid = request.getParameter("cust_id");
-		String password = request.getParameter("pass");
-		
+		int amount=Integer.parseInt(request.getParameter("tamt"));
+		String taccno=(String)request.getParameter("tacct");
+		HttpSession session=request.getSession();
+		String accno=(String)session.getAttribute("acc_id");
 		LoginDao dao=new LoginDao();
-		dao.setPassword(password);
-		dao.setCust_id(cid);
-		boolean status = dao.loginToHomePage();
-		String acc_id=dao.getAcc_id();
-		if(status) {
-			HttpSession session=request.getSession(true);
-			session.setAttribute("acc_id", acc_id);
-			session.setAttribute("DAO", dao);
-			response.sendRedirect("home.jsp");
-		}else {
-			response.sendRedirect("loginUnSuccessfull.html");;
-		}
-		
+		dao.setAcc_id(accno);
+		dao.setAmount(amount);
+		dao.settAcct(taccno);
+		boolean status = dao.transferAmount();
+		if(status)
+			response.sendRedirect("amountTransferSuccess.html");
+		else
+			response.sendRedirect("amountTransferFail.html");
 	}
 
 }

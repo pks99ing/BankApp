@@ -11,11 +11,21 @@ public class LoginDao {
 	private String acc_id;
 	private String balance;
 	private String password;
+	private String tAcct;
 	private int amount;
 	private Connection con;
 	private PreparedStatement pst;
 	private ResultSet result;
 	private int rowAffected;
+	private String helperBalance;
+
+	public String gettAcct() {
+		return tAcct;
+	}
+
+	public void settAcct(String tAcct) {
+		this.tAcct = tAcct;
+	}
 
 	public void setAmount(int amount) {
 		this.amount = amount;
@@ -161,5 +171,58 @@ public class LoginDao {
 
 		return false;
 	}
+	
+	public boolean transferAmount() {
+		try {	
+			pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
+			pst.setString(1, acc_id);
+			result = pst.executeQuery();
+			while (result.next()) {
+				balance = result.getString(1);
+			}
+			System.out.println(tAcct+" "+acc_id + " "+amount);
+			if(Integer.parseInt(balance)>amount) {
+				pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
+				pst.setString(1, tAcct);
+				result = pst.executeQuery();
+				while (result.next()) {
+					helperBalance = result.getString(1);
+				}
+				helperBalance=Integer.toString(Integer.parseInt(helperBalance)+amount);
+				pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
+				pst.setString(1, helperBalance);
+				pst.setString(2, tAcct);
+				rowAffected=pst.executeUpdate();
+				if(rowAffected>0) {
+					balance=Integer.toString(Integer.parseInt(balance)-amount);
+					pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
+					pst.setString(1, balance);
+					pst.setString(2, acc_id);
+					int row=pst.executeUpdate();
+					if(row>0)
+						return true;
+					else
+						return false;
+				}	
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+

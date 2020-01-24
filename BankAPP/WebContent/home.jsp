@@ -12,6 +12,7 @@
 	<a href="Balance">Check Balance</a><hr><br>
 	<a href="ChangePwd.html">Change Password</a><hr><br>
 	<a href="withdrawalInput.html">click to Withdrawal</a><hr><br>
-	<a href="amountdepositInput.html">click to Deposit Amount</a>
+	<a href="amountdepositInput.html">click to Deposit Amount</a><hr><br>
+	<a href="amountTransfer.html">TransferAmount</a>
 </body>
 </html>
