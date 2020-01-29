@@ -7,12 +7,22 @@
 <title>Insert title here</title>
 </head>
 <body>
+<%
+		response.setHeader("cache-control","no-cache");
+		response.setHeader("cache-control","no-store");
+		response.setHeader("cache-control","must-revalidate");
+		response.setDateHeader("Expire", 0);
+	%>
 	<h1>Login Successful</h1>
 	
 	<a href="Balance">Check Balance</a><hr><br>
 	<a href="ChangePwd.html">Change Password</a><hr><br>
-	<a href="withdrawalInput.html">click to Withdrawal</a><hr><br>
-	<a href="amountdepositInput.html">click to Deposit Amount</a><hr><br>
-	<a href="amountTransfer.html">TransferAmount</a>
+	<a href="amountTransfer.html">TransferAmount</a><hr><br>
+	<a href="getTransactionDetails">Get All Transaction Details</a><hr><br>
+	<a href="loan.html">Apply Loan</a>
+	<div align="right">
+		<a href="logout">Logout</a>
+	</div>
+	
 </body>
 </html>

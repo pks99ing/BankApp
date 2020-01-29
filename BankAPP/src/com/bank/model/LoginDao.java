@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class LoginDao {
 	private String cust_id;
@@ -12,6 +13,25 @@ public class LoginDao {
 	private String balance;
 	private String password;
 	private String tAcct;
+	private String loanType;
+	private int interest;
+
+	public String getLoanType() {
+		return loanType;
+	}
+
+	public void setLoanType(String loanType) {
+		this.loanType = loanType;
+	}
+
+	public int getInterest() {
+		return interest;
+	}
+
+	public void setInterest(int interest) {
+		this.interest = interest;
+	}
+
 	private int amount;
 	private Connection con;
 	private PreparedStatement pst;
@@ -122,107 +142,112 @@ public class LoginDao {
 
 	}
 
-	public boolean withDrawal() {
-		try {
-			pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
-			pst.setString(1, acc_id);
-			result = pst.executeQuery();
-
-			while (result.next()) {
-				balance = result.getString(1);
-			}
-			if (Integer.parseInt(balance) > amount) {
-				balance = Integer.toString(Integer.parseInt(balance) - amount);
-				pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
-				pst.setString(1, balance);
-				pst.setString(2, acc_id);
-				rowAffected = pst.executeUpdate();
-				if (rowAffected != 0)
-					return true;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public boolean amountDeposit() {
-		try {
-			pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
-			pst.setString(1, acc_id);
-			result = pst.executeQuery();
-
-			while (result.next()) {
-				balance = result.getString(1);
-			}
-
-			balance = Integer.toString(Integer.parseInt(balance) + amount);
-			pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
-			pst.setString(1, balance);
-			pst.setString(2, acc_id);
-			rowAffected = pst.executeUpdate();
-			if (rowAffected != 0)
-				return true;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return false;
-	}
-	
 	public boolean transferAmount() {
-		try {	
+		try {
+			con.setAutoCommit(false);
 			pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
 			pst.setString(1, acc_id);
 			result = pst.executeQuery();
 			while (result.next()) {
 				balance = result.getString(1);
 			}
-			System.out.println(tAcct+" "+acc_id + " "+amount);
-			if(Integer.parseInt(balance)>amount) {
+			System.out.println(tAcct + " " + acc_id + " " + amount);
+			if (Integer.parseInt(balance) > amount) {
 				pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
 				pst.setString(1, tAcct);
 				result = pst.executeQuery();
 				while (result.next()) {
 					helperBalance = result.getString(1);
 				}
-				helperBalance=Integer.toString(Integer.parseInt(helperBalance)+amount);
+				helperBalance = Integer.toString(Integer.parseInt(helperBalance) + amount);
 				pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
 				pst.setString(1, helperBalance);
 				pst.setString(2, tAcct);
-				rowAffected=pst.executeUpdate();
-				if(rowAffected>0) {
-					balance=Integer.toString(Integer.parseInt(balance)-amount);
+				rowAffected = pst.executeUpdate();
+				if (rowAffected > 0) {
+					balance = Integer.toString(Integer.parseInt(balance) - amount);
 					pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
 					pst.setString(1, balance);
 					pst.setString(2, acc_id);
-					int row=pst.executeUpdate();
-					if(row>0)
-						return true;
-					else
+					int row = pst.executeUpdate();
+					if (row > 0) {
+						pst = con.prepareStatement("Insert into trans_details values(?,?)");
+						pst.setString(1, acc_id);
+						pst.setString(2, Integer.toString(amount));
+						int row1 = pst.executeUpdate();
+						if (row1 > 0) {
+							con.commit();
+							return true;
+						} else {
+							con.rollback();
+							return false;
+						}
+					} else
 						return false;
-				}	
+				}
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return false;
 	}
 
+	public ArrayList<String> getTransaction() {
+		ArrayList<String> list = new ArrayList();
+		try {
+			pst = con.prepareStatement("select amount from trans_details where Acc_no=?");
+			pst.setString(1, acc_id);
+			result = pst.executeQuery();
+			while (result.next()) {
+				list.add(result.getString(1));
+			}
+			return list;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return list;
+	}
+
+	public boolean updateLoan() {
+		try {
+			pst = con.prepareStatement("select acc_no from loan where Acc_no=?");
+			pst.setString(1, acc_id);
+			result = pst.executeQuery();
+			if (!result.next()) {
+				pst = con.prepareStatement("Insert into loan values(?,?,?)");
+				pst.setString(1, acc_id);
+				pst.setInt(2, interest);
+				pst.setString(3, loanType);
+				int row = pst.executeUpdate();
+				if(row>0) {
+					pst = con.prepareStatement("select balance from bank_info where Acc_no=?");
+					pst.setString(1, acc_id);
+					result = pst.executeQuery();
+					while (result.next()) {
+						balance = result.getString(1);
+					}
+					balance = Integer.toString(Integer.parseInt(balance) + amount);
+					pst = con.prepareStatement("update bank_info set balance=? where Acc_no=?");
+					pst.setString(1,balance);
+					pst.setString(2, acc_id);
+					rowAffected = pst.executeUpdate();
+					if(rowAffected>0)
+						return true;
+					else
+						return false;
+				}
+			}
+			else {
+				return false;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
